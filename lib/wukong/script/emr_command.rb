@@ -69,7 +69,7 @@ module Wukong
         "--stream",
         "--mapper=#{mapper_s3_uri} ",
         "--reducer=#{reducer_s3_uri} ",
-        "--input=#{input_paths.join(",")} --output=#{output_path}",
+        "--input=#{options[:input_paths].join(",")} --output=#{options[:output_path]}",
       ]
       # eg to specify zero reducers:
       # Settings[:emr_extra_args] = "--arg '-D mapred.reduce.tasks=0'"
@@ -130,11 +130,11 @@ module Wukong
     #
     def fix_paths!
       return if Settings.emr_data_root.blank?
-      unless input_paths.blank?
-        @input_paths = input_paths.map{|path|   (path =~ ABSOLUTE_URI) ? path : File.join(Settings.emr_data_root, path) }
+      unless options[:input_paths].blank?
+        options[:input_paths] = options[:input_paths].map{|path|   (path =~ ABSOLUTE_URI) ? path : File.join(Settings.emr_data_root, path) }
       end
-      unless output_path.blank?
-        @output_path = [output_path].map{|path| (path =~ ABSOLUTE_URI) ? path : File.join(Settings.emr_data_root, path) }
+      unless options[:output_path].blank?
+        options[:output_path] = [options[:output_path]].map{|path| (path =~ ABSOLUTE_URI) ? path : File.join(Settings.emr_data_root, path) }
       end
     end
 

@@ -58,7 +58,7 @@ module Wukong
     #
     def execute_hadoop_workflow
       # Input paths join by ','
-      input_paths = @input_paths.join(',')
+      options[:input_paths] = options[:input_paths].join(',')
       #
       # Use Settings[:hadoop_home] to set the path your config install.
       hadoop_commandline = [
@@ -69,8 +69,8 @@ module Wukong
         hadoop_other_args,
         "-mapper  '#{mapper_commandline(:hadoop)}'",
         "-reducer '#{reducer_commandline(:hadoop)}'",
-        "-input   '#{input_paths}'",
-        "-output  '#{output_path}'",
+        "-input   '#{options[:input_paths]}'",
+        "-output  '#{options[:output_path]}'",
         "-file    '#{this_script_filename}'",
         hadoop_recycle_env,
       ].flatten.compact.join(" \t\\\n  ")

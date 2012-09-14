@@ -25,9 +25,9 @@ module Wukong
     # With an output path of '-', just uses $stdout
     #
     def local_commandline
-      @input_paths = input_paths.map(&:strip).join(' ')
-      cmd_input_str  = (input_paths == '-') ? "" : "cat '#{input_paths}' | "
-      cmd_output_str = (output_path == '-') ? "" : "> '#{output_path}'"
+      options[:input_paths] = options[:input_paths].map(&:strip).join(' ')
+      cmd_input_str  = (options[:input_paths] == '-') ? "" : "cat '#{options[:input_paths]}' | "
+      cmd_output_str = (options[:output_path] == '-') ? "" : "> '#{options[:output_path]}'"
 
       if (reducer || options[:reduce_command])
         %Q{ #{cmd_input_str} #{mapper_commandline} | #{local_mode_sort_commandline} | #{reducer_commandline} #{cmd_output_str} }

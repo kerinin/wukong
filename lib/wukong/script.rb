@@ -73,7 +73,6 @@ module Wukong
     include Wukong::HadoopCommand
     include Wukong::LocalCommand
     attr_reader :mapper, :reducer, :options
-    attr_reader :input_paths, :output_path
 
     # ---------------------------------------------------------------------------
     #
@@ -103,6 +102,8 @@ module Wukong
     Settings.define :reduce,                                   :description => "run the script's reduce phase. Reads/writes to STDIN/STDOUT. You can only choose one of --run, --map or --reduce.", :wukong => true
     Settings.define :dry_run,                                  :description => "echo the command that will be run, but don't run it", :wukong => true
     Settings.define :rm,                                       :description => "Recursively remove the destination directory. Only used in hadoop mode.", :wukong => true
+    Settings.define :input_paths,                              :description => "Input paths for the job"
+    Settings.define :output_path,                              :description => "Output path for the job"
 
     #
     # Instantiate the Script with the Mapper and the Reducer class (each a
@@ -134,12 +135,11 @@ module Wukong
     def initialize mapper, reducer=nil, extra_options={}
       Settings.resolve!
       @options = Settings
-      options.merge! extra_options
+      options.merge!({:input_paths => options.rest.pop, :output_path => options.rest.reject(&:blank?)})
+      options.merge!(extra_options)
       @mapper  = (case mapper  when Class then mapper.new  when nil then nil else mapper  ; end)
       @reducer = (case reducer when Class then reducer.new when nil then nil else reducer ; end)
-      @output_path = options.rest.pop
-      @input_paths = options.rest.reject(&:blank?)
-      if (input_paths.blank? || output_path.blank?) && (not options[:dry_run]) && (not ['map', 'reduce'].include?(run_mode))
+      if (options[:input_paths].blank? || options[:output_path].blank?) && (not options[:dry_run]) && (not ['map', 'reduce'].include?(run_mode))
         raise "You need to specify a parsed input directory and a directory for output. Got #{ARGV.inspect}"
       end
     end
@@ -213,7 +213,7 @@ module Wukong
 
     def job_name
       options[:job_name] ||
-        "#{File.basename(this_script_filename)}---#{input_paths}---#{output_path}".gsub(%r{[^\w/\.\-\+]+}, '')
+        "#{File.basename(this_script_filename)}---#{options[:input_paths]}---#{options[:output_path]}".gsub(%r{[^\w/\.\-\+]+}, '')
     end
 
     # Wrapper for dangerous operations to catch errors
@@ -235,7 +235,7 @@ module Wukong
       if options[:dry_run]
         Log.info '== [Not running preceding command: dry run] =='
       else
-        maybe_overwrite_output_paths! output_path
+        maybe_overwrite_output_paths! options[:output_path]
         $stdout.puts `#{command}`
         raise "Streaming command failed!" unless $?.success?
       end
